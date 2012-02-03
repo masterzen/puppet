@@ -126,16 +126,16 @@ describe process_name do
     end
 
     it "should start the scroller" do
-      Thread.expects(:new)
+      EventLoop::Timer.expects(:new).with(:interval => 1, :tolerance => 1, :start? => true)
       @process_name.subscribed
     end
   end
 
   describe "when unsubscribed" do
     before(:each) do
-      @thread = stub 'scroller', :inspect => "\#<Thread:0x1234abdc run>"
-      Thread.stubs(:new).returns(@thread)
-      Thread.stubs(:kill)
+      @thread = stub 'thread', :inspect => "\#<Thread:0x1234abdc run>"
+      @timer = stub 'timer', :stop => false
+      EventLoop::Timer.expects(:new).returns(@timer)
       @oldname = $0
       @process_name.subscribed
     end
@@ -145,7 +145,7 @@ describe process_name do
     end
 
     it "should stop the scroller" do
-      Thread.expects(:kill).with(@thread)
+      @timer.expects(:stop)
       @process_name.unsubscribed
     end
 

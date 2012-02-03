@@ -1,4 +1,5 @@
 require 'monitor'
+require 'puppet/external/event-loop'
 
 # Unlike the other instrumentation plugins, this one doesn't give back
 # data. Instead it changes the process name of the currently running process
@@ -27,11 +28,8 @@ Puppet::Util::Instrumentation.new_listener(:process_name) do
   def subscribed
     synchronize do
       @oldname = $0
-      @scroller ||= Thread.new do
-        loop do
-          scroll
-          sleep 1
-        end
+      @scroller ||= EventLoop::Timer.new(:interval => 1, :tolerance => 1, :start? => true) do
+        scroll
       end
     end
   end
@@ -39,7 +37,7 @@ Puppet::Util::Instrumentation.new_listener(:process_name) do
   def unsubscribed
     synchronize do
       $0 = @oldname if @oldname
-      Thread.kill(@scroller)
+      @scroller.stop
       @scroller = nil
     end
   end

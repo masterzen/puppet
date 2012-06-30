@@ -68,8 +68,13 @@ class Puppet::Resource::TypeCollection
   end
 
   def loader
-    require 'puppet/parser/type_loader'
-    @loader ||= Puppet::Parser::TypeLoader.new(environment)
+    # MRI 1.8.7/1.9 does a full search in the load path, for every require
+    # without any cache. This can be slow if it gets called too many times.
+    unless @loader
+      require 'puppet/parser/type_loader'
+      @loader = Puppet::Parser::TypeLoader.new(environment)
+    end
+    @loader
   end
 
   def node(name)

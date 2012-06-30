@@ -102,7 +102,10 @@ class Puppet::Util::Autoload
     def module_directories(env=nil)
       # We have to require this late in the process because otherwise we might have
       # load order issues.
-      require 'puppet/node/environment'
+      unless @required
+        require 'puppet/node/environment'
+        @required = true
+      end
 
       real_env = Puppet::Node::Environment.new(env)
 

@@ -228,7 +228,7 @@ class Puppet::Parser::Scope
     dynamic_value = dynamic_lookupvar(name,options)
     twoscope_value = twoscope_lookupvar(name,options)
     if dynamic_value != twoscope_value
-      location = (options[:file] && options[:line]) ? " at #{options[:file]}:#{options[:line]}" : ''
+      location = (options[:file] && (options[:line] || options[:lineproc])) ? " at #{options[:file]}:#{options[:line]|| options[:lineproc].call}" : ''
       Puppet.deprecation_warning("Dynamic lookup of $#{name}#{location} is deprecated. For more information, see http://docs.puppetlabs.com/guides/scope_and_puppet.html. To see the change in behavior, use the --debug flag.")
       Puppet.debug("Currently $#{name} is #{dynamic_value.inspect}")
       Puppet.debug("In the future $#{name} will be #{twoscope_value == :undefined ? "undefined" : twoscope_value.inspect}")
@@ -246,7 +246,7 @@ class Puppet::Parser::Scope
       begin
         qualified_scope($1).twoscope_lookupvar($2, options.merge({:origin => nil}))
       rescue RuntimeError => e
-        location = (options[:file] && options[:line]) ? " at #{options[:file]}:#{options[:line]}" : ''
+        location = (options[:file] && (options[:line] || options[:lineproc])) ? " at #{options[:file]}:#{options[:line]|| options[:lineproc].call}" : ''
         warning "Could not look up qualified variable '#{name}'; #{e.message}#{location}"
         :undefined
       end

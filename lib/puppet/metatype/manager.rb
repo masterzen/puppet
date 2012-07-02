@@ -12,6 +12,7 @@ module Manager
     @types.each { |name, type|
       type.clear
     }
+     Thread.current[:notfound] = {}
   end
 
   # iterate across all of the subclasses of Type
@@ -107,14 +108,21 @@ module Manager
   # Return a Type instance by name.
   def type(name)
     @types ||= {}
+    Thread.current[:notfound] ||= {}
 
     name = name.to_s.downcase.to_sym
+
+    return if Thread.current[:notfound][name]
 
     if t = @types[name]
       return t
     else
       if typeloader.load(name)
         Puppet.warning "Loaded puppet/type/#{name} but no class was created" unless @types.include? name
+      end
+
+      unless @types[name]
+        Thread.current[:notfound][name] = true
       end
 
       return @types[name]
